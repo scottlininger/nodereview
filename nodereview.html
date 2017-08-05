@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link REL="shortcut icon" HREF="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAI7SURBVHjahJPPaxNBFMc/sz+yyaZJatpqPShWRLGKlF68+usoCIL/gBcvnoqIoEcVRCievAh69KSgF0EREQoebEuhtDWlViv9YZtt0zTubjY72fHQJmabgm94MLz3ne/7znszKKVodRT5g5Vj00PjL27vzu3lGi0mEHngvSYTJ9OG9ejy5wd3+Y8Zjc3N0Wd5YyD5URrVAU95/HIdLN28f23k8UZ/7tCbfKJDhaouFr312pPB607jnAbwcOrV1YRmTNkLxwcAPFnj3co4I8UZCpXlp8v+xret0C/IqD7jyur0kbc3hmIK5t3V4cnNhd4t0wMgkCFrThGCOmtqhcmF2QyWjmWnsA2LUqV8CxhuEkyUflhjzhwciLZp95Xh4hjUFSgABUIjKPQROD0QyCimoBx6EZH615lkDY7+bu9YNoQP+yHY1USlVAxnhznOb14hihTz7irfu78isyUSWgI7lWHTLxFrohAiRpCodXBq6RInls7hTPQiN9Lb1TSdjJGCFvyeCrx6lddLX/hZKSLdKkR19sI1CYQQsUxNSubWFsGXENZBbsfVzmoj0BACIaChLBVA/yyECpSCrj/NK6SNZDuBqen02DmKxs7LTlXhbKFNbsZM0pvspLCboBx6WpeVIbE6iNmTI22ZGEInUhEK0IWGKQzOOBcYrZVoHbkBsFguhkQKNEF36TR9nYfJmnYTFClFOXR5uT6Nv+VCIPX4Z/LDO/jyHjLKOo7HJ7EcG9UOS6Oyj+B5I/x3AKPIHLQOHLL3AAAAAElFTkSuQmC" TYPE="image/x-icon">
+<title>Nodereview</title>
+
+
+
+<link href='//fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+<link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+<style>
+body {
+  padding: 120px 20px 20px 20px;
+  font-family: 'Montserrat', monospace;
+}
+.table-wrapper {
+  border: 1px solid #ccc;
+  padding: 20px;
+  box-shadow: 0px 2px 5px #eee;
+  border-radius: 4px;
+}
+table {
+  width: 100%;
+  font-family: 'Inconsolata', monospace;
+  font-size: 13px;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  padding: 20px;
+}
+select {
+  font-family: 'Montserrat', monospace;
+  padding: 3px 9px;
+  margin-bottom: 20px;
+  border: 1px #ccc;
+  position: fixed;
+  top: 55px;
+  left: 30px;
+  z-index: 100;
+  border-radius: 4px;
+  background: #eee;
+}
+.insert {
+  background: #9f9;
+}
+.delete {
+  background: #faa;
+}
+.change {
+  background: #fee;
+}
+th {
+  vertical-align: top;
+  font-weight: normal;
+  text-align: right;
+  padding: 0 12px;
+  color: #555;
+}
+td {
+  vertical-align: top;
+  padding-right: 12px;
+  white-space: pre-wrap;
+}
+h3 {
+  background-color: #eee;
+  padding: 9px;
+  border: 1px solid #ccc;
+  margin: -21px -21px 21px -21px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+h2 {
+  background: #444;
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 18px 20px 50px 30px;
+  margin: 0;
+}
+tr.collapsed {
+  display: none;
+}
+.collapse-button {
+  border-top: 6px solid white;
+  border-bottom: 6px solid white;
+}
+.collapse-button td {
+
+}
+.collapse-button div {
+  padding: 4px;
+  text-align: center;
+  font-family: 'Montserrat', monospace;
+  font-style: italic;
+  border-top: 1px dotted #ccc;
+  border-bottom: 1px dotted #ccc;
+  color: #ccc;
+  cursor: pointer;
+}
+</style>
+<body>
+<script>
+// How many lines of "context" code to display before and after chunks of
+// changed code.
+var linesOfContextToDisplayAroundDiffs = 10;
+
+function selectFile() {
+  var select = document.getElementsByTagName('select')[0];
+  var wrappers = document.getElementsByClassName('table-wrapper');
+  var id = select.value;
+  console.log(id);
+  for (var i = 0; i < wrappers.length; i++) {
+    wrappers[i].style.display = 'none';
+  }
+  document.getElementById(id).style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function uncollapse(button, classNameToReveal) {
+  button.style.display = 'none';
+  var rows = document.getElementsByClassName(classNameToReveal);
+  for (var i = 0; i < rows.length; i++) {
+    rows[i].className = '';
+  }
+}
+
+function gitShowOutputToHtml(showText) {
+  var lines = showText.split('\n');
+
+  // Note that the actual 1st line looks like this:
+  //
+  //   #commit ca9270a4ef3e129c312b1874149e1c7eab848f29
+  //
+  // So we drop the first 7 characters to get the actual hash.
+  var gitFullHash = lines[0].substr(7);
+  var gitShortHash = gitFullHash.substr(0,7);
+  var gitDescription = lines[4];
+  document.title = gitDescription;
+
+  var html = ['<h2>', gitShortHash, ' &middot; ', gitDescription, '</h2>',
+              '<select onchange="selectFile()">'];
+
+  // A hash of "code chunks", which are diff chunks.
+  // The lines will be stored in arrays called 'inserted',
+  // 'deleted', or 'unchanged'.
+  var codeChunksByFileName = {};
+  var chunk = null;
+
+  var isInsideCode = false;
+  var isInsideDiffChunk = false;
+  var leftLineNumber = 1;
+  var rightLineNumber = 1;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+
+    if (line.indexOf('diff --git ') == 0) {
+      isInsideCode = false;
+
+      var fileName = line.substr(line.indexOf(' b/') + 3);
+      var fileLabel = fileName;
+      
+
+      var nextLine = lines[i + 1] || '';
+      if (nextLine.indexOf('deleted') == 0) {
+        fileLabel = 'DELETED &middot; ' + fileName;
+      } else if (nextLine.indexOf('new file') == 0) {
+        fileLabel = 'CREATED &middot; ' + fileName;
+      } else {
+        fileLabel = 'CHANGED &middot; ' + fileName;
+      }
+      
+      html.push('<option value="', fileLabel, '">', fileLabel, '</option>');
+      chunk = [];
+      codeChunksByFileName[fileLabel] = [];
+      codeChunksByFileName[fileLabel].push(chunk);
+
+    }
+    if (line.indexOf('@@') == 0) {
+      isInsideCode = true;
+    }
+    if (isInsideCode) {
+      var action = line.substr(0, 1);
+      var code = line.substr(1);
+
+      if (action == ' ') {
+        if (isInsideDiffChunk == true) {
+          // Then we're in a new chunk. Create it.
+          chunk = [];
+          codeChunksByFileName[fileLabel].push(chunk);
+          isInsideDiffChunk = false;
+        }
+        chunk['unchanged'] = chunk['unchanged'] || [];
+        chunk['unchanged'].push(code);
+        
+
+      } else if (action == '+') {
+        if (isInsideDiffChunk == false) {
+          // Then we're in a new chunk. Create it.
+          chunk = [];
+          codeChunksByFileName[fileLabel].push(chunk);
+          isInsideDiffChunk = true;
+        }
+        chunk['inserted'] = chunk['inserted'] || [];
+        chunk['inserted'].push(code);
+      
+      } else if (action == '-') {
+        if (isInsideDiffChunk == false) {
+          // Then we're in a new chunk. Create it.
+          chunk = [];
+          codeChunksByFileName[fileLabel].push(chunk);
+          isInsideDiffChunk = true;
+        }
+        chunk['deleted'] = chunk['deleted'] || [];
+        chunk['deleted'].push(code);
+      }
+    }
+  }
+  html.push('<option value="git-show-text">Raw output from git show</option>');
+  html.push('</select>');
+
+  for (fileName in codeChunksByFileName) {
+    leftLineNumber = 0;
+    rightLineNumber = 0;
+    html.push('<div class="table-wrapper" id="', fileName, '"><h3>',
+              fileName, '</h3><table>');
+
+    var chunks = codeChunksByFileName[fileName];
+    for (var c = 0; c < chunks.length; c++) {
+      var chunk = chunks[c];
+      var insertedLines = chunk['inserted'];
+      var deletedLines = chunk['deleted'];
+      var unchangedLines = chunk['unchanged'];
+
+      // This is a chunk of unchanged code. Just dump it out.
+      if (unchangedLines) {
+        for (var j = 0; j < unchangedLines.length; j++) {
+          leftLineNumber++;
+          rightLineNumber++;
+          var code = unchangedLines[j];
+          var rowClass = 'chunk' + c;
+          var totalLinesToCollapse = unchangedLines.length + 1 -
+                                     linesOfContextToDisplayAroundDiffs * 2;
+          
+          if (j >= linesOfContextToDisplayAroundDiffs &&
+              j < unchangedLines.length - linesOfContextToDisplayAroundDiffs) {
+            rowClass += ' collapsed';
+          }
+          html.push('<tr class="', rowClass ,'"><th>' + leftLineNumber +
+                    '</th><td width="50%">' + escapeHtml(code) +
+                    '</td><th>' + rightLineNumber +'</th><td width="50%">' +
+                    escapeHtml(code) + '</td></tr>');
+          
+          if (totalLinesToCollapse > 0 &&
+              j == linesOfContextToDisplayAroundDiffs) {
+            html.push('<tr class="collapse-button" ',
+                      'onclick="uncollapse(this, \'chunk', c, '\')"><td colspan="4"><div>click to see ',
+                      totalLinesToCollapse, ' hidden lines</div></td></tr>');
+          }
+        }
+      }
+
+      // This is a chunk of new code. Show on right side.
+      if (insertedLines && !deletedLines) {
+        for (var j = 0; j < insertedLines.length; j++) {
+          rightLineNumber++;
+          var code = insertedLines[j];
+          html.push('<tr><th>&nbsp;</th><td width="50%">&nbsp;' +
+                    '</td><th class="insert">' + rightLineNumber +
+                    '</th><td class="insert" width="50%">' + escapeHtml(code) +
+                    '</td></tr>');
+        }
+      }
+
+      // This is a chunk of deleted code. Show on left side.
+      if (deletedLines && !insertedLines) {
+        for (var j = 0; j < deletedLines.length; j++) {
+          leftLineNumber++;
+          var code = deletedLines[j];
+          html.push('<tr><th class="delete">' + leftLineNumber +
+                    '</th><td class="delete" width="50%">' + escapeHtml(code) +
+                    '</td><th>&nbsp;</th><td width="50%">&nbsp;' +
+                    '</td></tr>');
+        }
+      }
+
+      // This is a chunk of modified code. Show on both sides.
+      if (deletedLines && insertedLines) {
+        var totalLines = Math.max(deletedLines.length, insertedLines.length);
+        for (var j = 0; j < totalLines; j++) {
+          var deletedCode = deletedLines[j];
+          var insertedCode = insertedLines[j];
+
+          if (deletedCode) {
+            leftLineNumber++;
+            html.push('<tr><th class="change">' + leftLineNumber +
+                      '</th><td class="change" width="50%">' +
+                      escapeHtml(deletedCode) + '</td>');
+
+          } else {
+            html.push('<tr><th class="change">&nbsp;</th>' +
+                      '<td class="change" width="50%">&nbsp;</td>');
+          }
+ 
+          if (insertedCode) {
+            rightLineNumber++;
+            html.push('<th class="insert">' + rightLineNumber +
+                      '</th><td class="insert" width="50%">' +
+                      escapeHtml(insertedCode) + '</td>');
+           
+          } else {
+            html.push('<th class="insert">&nbsp;' +
+                      '</th><td class="insert" width="50%">&nbsp;</td>');
+          }
+
+          
+        }
+      }
+      
+    }
+    html.push('</table></div>');
+  }
+
+  html.push('<div class="table-wrapper" id="git-show-text">',
+            '<h3>Raw output from <span style="font-family:Inconsolata">',
+            'git show</code></h3>',
+            '<pre>',  escapeHtml(showText), '</pre><table>');
+  return html.join('');
+}
+
+
+/**
+ * Turns HTML or other code into something that can be shown and wraps nicely.
+ */
+function escapeHtml(str) {
+  str = str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // If it's a nasty-long dataURL, fix that up.
+  if (str.indexOf('data:') > -1 && str.indexOf('\n') == -1) {
+    var length = 20;
+    str = str.match(new RegExp('.{1,' + length + '}', 'g')).join('<wbr>');
+  }
+
+  str = str.replace(/\;/gi, ';<wbr>');
+  str = str.replace(/\(/gi, '(<wbr>');
+  str = str.replace(/\)/gi, ')<wbr>');
+  str = str.replace(/\}/gi, '}<wbr>');
+  str = str.replace(/\,/gi, ',<wbr>');
+  str = str.replace(/\./gi, '.<wbr>');
+  str = str.replace(/\'/gi, '\'<wbr>');
+  str = str.replace(/\"/gi, '\"<wbr>');
+
+  return str;
+}
+
+
+/**
+ * Okay, now display everything.
+ */
+var showText = decodeURIComponent(window.location.hash);
+var html = gitShowOutputToHtml(showText);
+document.write(html);
+selectFile();
+
+</script>
+</body>
+
+</html>
