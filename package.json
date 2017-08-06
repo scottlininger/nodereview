@@ -1,0 +1,34 @@
+{
+  "name": "nodereview",
+  "version": "1.0.0",
+  "description": "Simple code review tool to send side-by-side diffs of a current git branch.",
+  "main": "nodereview.js",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "emailjs": "^1.0.8",
+    "openurl": "^1.1.1",
+    "prompt": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scottlininger/nodereview.git"
+  },
+  "keywords": [
+    "nodejs",
+    "node",
+    "git",
+    "code",
+    "review",
+    "email"
+  ],
+  "author": "Scott Lininger",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/scottlininger/nodereview/issues"
+  },
+  "homepage": "https://github.com/scottlininger/nodereview#readme"
+}
